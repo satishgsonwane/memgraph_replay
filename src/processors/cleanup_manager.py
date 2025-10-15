@@ -30,7 +30,7 @@ class CleanupManager:
             current_time = datetime.now(timezone.utc)
         
         # Get rolling window from config
-        rolling_window_seconds = self.config.rolling_window_seconds if self.config else 120
+        rolling_window_seconds = self.config.rolling_window_seconds if self.config else 30
         cutoff_time = current_time - timedelta(seconds=rolling_window_seconds)
         cutoff_timestamp = cutoff_time.isoformat().replace('+00:00', 'Z')
 
@@ -133,7 +133,7 @@ class CleanupManager:
             current_time = datetime.now(timezone.utc)
         
         # Get rolling window from config
-        rolling_window_seconds = self.config.rolling_window_seconds if self.config else 120
+        rolling_window_seconds = self.config.rolling_window_seconds if self.config else 30
         cutoff_time = current_time - timedelta(seconds=rolling_window_seconds)
         cutoff_timestamp = cutoff_time.isoformat().replace('+00:00', 'Z')
 
@@ -172,7 +172,7 @@ class CleanupManager:
             current_time = datetime.now(timezone.utc)
         
         # Get rolling window from config
-        rolling_window_seconds = self.config.rolling_window_seconds if self.config else 120
+        rolling_window_seconds = self.config.rolling_window_seconds if self.config else 30
         cutoff_time = current_time - timedelta(seconds=rolling_window_seconds)
         cutoff_timestamp = cutoff_time.isoformat().replace('+00:00', 'Z')
 
@@ -207,11 +207,11 @@ class CleanupManager:
             current_time = datetime.now(timezone.utc)
         
         # Shorter rolling window for aggressive cleanup
-        rolling_window_seconds = 15  # Much shorter window for track data
+        rolling_window_seconds = 30  # Extended window for track data
         cutoff_time = current_time - timedelta(seconds=rolling_window_seconds)
         cutoff_timestamp = cutoff_time.isoformat().replace('+00:00', 'Z')
 
-        logger.info(f"Aggressive cleanup: removing data older than {cutoff_timestamp} (15s window)")
+        logger.info(f"Aggressive cleanup: removing data older than {cutoff_timestamp} (30s window)")
 
         # Prioritize track cleanup first (most numerous with detection data)
         cleanup_priority = [

@@ -71,8 +71,8 @@ This is the primary TTL system, replacing the legacy tick-based approach.
 """
 
 # Data retention period in seconds
-# Reduced window to prevent database bloat
-ROLLING_WINDOW_SECONDS = 15
+# Set to 30 seconds for extended data retention
+ROLLING_WINDOW_SECONDS = 30
 
 # How often to run cleanup operations (seconds)
 # Very frequent cleanup to prevent database bloat
