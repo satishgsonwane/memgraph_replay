@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 class NATSReplay:
     """Replays captured NATS messages to local server"""
     
-    def __init__(self, config: ReplayConfig):
+    def __init__(self, config: ReplayConfig, loop: bool = False):
         self.config = config
         self.nc: Optional[nats.NATS] = None
         self.messages: List[Dict[str, Any]] = []
@@ -31,6 +31,8 @@ class NATSReplay:
         self.start_time: Optional[float] = None
         self.messages_published: int = 0
         self.current_tick: int = 0
+        self.loop: bool = loop
+        self.loop_count: int = 0
         
     def load_capture_file(self, file_path: Path) -> None:
         """Load captured messages from JSON file"""
@@ -127,40 +129,60 @@ class NATSReplay:
         
         logger.info(f"Starting replay of {len(self.messages)} messages at {self.framerate} Hz")
         logger.info(f"Replay interval: {self.replay_interval:.3f}s")
+        if self.loop:
+            logger.info("Loop mode enabled - replay will repeat indefinitely")
         
         self.start_time = time.time()
         
         try:
-            for i, message in enumerate(self.messages):
-                # Publish message
-                await self.publish_message(message)
+            while True:  # Loop indefinitely if loop mode is enabled
+                if self.loop and self.loop_count > 0:
+                    logger.info(f"Starting loop iteration {self.loop_count + 1}")
+                    # Reset timing for new loop
+                    self.start_time = time.time()
                 
-                # Calculate timing for next message
-                if i < len(self.messages) - 1:  # Don't sleep after last message
-                    # Calculate when next message should be published
-                    target_time = self.start_time + (i + 1) * self.replay_interval
-                    current_time = time.time()
-                    sleep_duration = target_time - current_time
+                # Replay all messages in this iteration
+                for i, message in enumerate(self.messages):
+                    # Publish message
+                    await self.publish_message(message)
                     
-                    # Only sleep if we're ahead of schedule
-                    if sleep_duration > 0:
-                        await asyncio.sleep(sleep_duration)
-                    else:
-                        # Log timing drift if significant
-                        drift = -sleep_duration
-                        if drift > 0.01:  # > 10ms drift
-                            logger.warning(f"Timing drift: {drift*1000:.1f}ms behind schedule")
-            
-            # Final statistics
-            total_time = time.time() - self.start_time
-            actual_rate = self.messages_published / total_time
-            
-            logger.info(f"Replay completed:")
-            logger.info(f"  Messages published: {self.messages_published}")
-            logger.info(f"  Total time: {total_time:.1f}s")
-            logger.info(f"  Actual rate: {actual_rate:.1f} msg/s")
-            logger.info(f"  Target rate: {self.framerate:.1f} msg/s")
-            logger.info(f"  Final tick: {self.current_tick}")
+                    # Calculate timing for next message
+                    if i < len(self.messages) - 1:  # Don't sleep after last message
+                        # Calculate when next message should be published
+                        target_time = self.start_time + (i + 1) * self.replay_interval
+                        current_time = time.time()
+                        sleep_duration = target_time - current_time
+                        
+                        # Only sleep if we're ahead of schedule
+                        if sleep_duration > 0:
+                            await asyncio.sleep(sleep_duration)
+                        else:
+                            # Log timing drift if significant
+                            drift = -sleep_duration
+                            if drift > 0.01:  # > 10ms drift
+                                logger.warning(f"Timing drift: {drift*1000:.1f}ms behind schedule")
+                
+                # Increment loop counter
+                self.loop_count += 1
+                
+                # Log completion of this iteration
+                total_time = time.time() - self.start_time
+                actual_rate = self.messages_published / total_time
+                
+                logger.info(f"Replay iteration {self.loop_count} completed:")
+                logger.info(f"  Messages published: {self.messages_published}")
+                logger.info(f"  Total time: {total_time:.1f}s")
+                logger.info(f"  Actual rate: {actual_rate:.1f} msg/s")
+                logger.info(f"  Target rate: {self.framerate:.1f} msg/s")
+                logger.info(f"  Final tick: {self.current_tick}")
+                
+                # If not in loop mode, break after first iteration
+                if not self.loop:
+                    break
+                
+                # Small delay between loops to prevent overwhelming the system
+                logger.info("Waiting 1 second before next loop iteration...")
+                await asyncio.sleep(1.0)
             
         except KeyboardInterrupt:
             logger.info("Replay interrupted by user")

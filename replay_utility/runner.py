@@ -147,7 +147,7 @@ async def run_replay_mode(args) -> None:
         bridge_manager.start_bridge()
         
         # Create replay instance
-        replay = NATSReplay(config)
+        replay = NATSReplay(config, loop=args.loop)
         
         # Run replay
         await replay.run_replay(input_path)
@@ -178,6 +178,9 @@ Examples:
   
   # Replay captured messages with bridge
   python -m replay_utility replay --input captured_data/capture_20250127_120000.json
+  
+  # Replay captured messages in loop mode
+  python -m replay_utility replay --input captured_data/capture_20250127_120000.json --loop
         """
     )
     
@@ -204,6 +207,11 @@ Examples:
         type=str,
         required=True,
         help='Input JSON file path'
+    )
+    replay_parser.add_argument(
+        '--loop', '-l',
+        action='store_true',
+        help='Loop the replay indefinitely (default: replay once and stop)'
     )
     
     # Parse arguments

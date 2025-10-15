@@ -4,8 +4,15 @@ Test script for NATS Replay Utility
 
 This script provides basic testing functionality for the replay utility.
 Run this to verify the implementation works correctly.
+
+Usage:
+    python test_replay_utility.py [--loop]
+    
+Options:
+    --loop    Run replay in continuous loop mode (default: single replay)
 """
 
+import argparse
 import asyncio
 import json
 import logging
@@ -39,17 +46,25 @@ async def test_capture():
         logger.error(f"Capture test failed: {e}")
         return None
 
-async def test_replay(file_path: Path):
+async def test_replay(file_path: Path, loop_mode: bool = False):
     """Test replay functionality"""
-    logger.info("Testing replay functionality...")
+    if loop_mode:
+        logger.info("Testing replay functionality in loop mode...")
+    else:
+        logger.info("Testing replay functionality...")
     
     config = ReplayConfig()
-    replay = NATSReplay(config)
+    replay = NATSReplay(config, loop=loop_mode)
     
     try:
-        # Set a reasonable timeout for testing (30 seconds)
-        import asyncio
-        await asyncio.wait_for(replay.run_replay(file_path), timeout=30.0)
+        if loop_mode:
+            # For loop mode, run indefinitely until interrupted
+            logger.info("Starting continuous loop replay (use Ctrl+C to stop)...")
+            await replay.run_replay(file_path)
+        else:
+            # Set a reasonable timeout for testing (30 seconds)
+            import asyncio
+            await asyncio.wait_for(replay.run_replay(file_path), timeout=30.0)
         logger.info("Replay test completed successfully")
         return True
     except asyncio.TimeoutError:
@@ -125,7 +140,18 @@ def test_json_format():
 
 async def main():
     """Run all tests"""
+    # Parse command line arguments
+    parser = argparse.ArgumentParser(description='Test script for NATS Replay Utility')
+    parser.add_argument(
+        '--loop', '-l',
+        action='store_true',
+        help='Run replay in continuous loop mode (default: single replay)'
+    )
+    args = parser.parse_args()
+    
     logger.info("Starting NATS Replay Utility tests...")
+    if args.loop:
+        logger.info("Loop mode enabled - replay will run continuously")
     
     # Test configuration
     test_config()
@@ -159,7 +185,7 @@ async def main():
     # Test replay with existing data
     logger.info("Testing replay with existing captured data...")
     try:
-        await test_replay(captured_file)
+        await test_replay(captured_file, loop_mode=args.loop)
         logger.info("Replay test passed")
     except Exception as e:
         logger.error(f"Replay test failed: {e}")

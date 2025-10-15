@@ -5,6 +5,13 @@
 # ===================================================
 # This script runs memgraph_skg.py first, waits for it to start up properly,
 # then runs test_replay_utility.py to test data population in Memgraph.
+# 
+# Usage:
+#   ./run_test_sequence.sh [--loop] [--help]
+#   
+# Options:
+#   --loop    Run replay in continuous loop mode (default: single replay)
+#   --help    Show this help message
 # ===================================================
 
 set -e  # Exit on any error
@@ -18,6 +25,9 @@ LOG_DIR="$SCRIPT_DIR/logs"
 PID_FILE="$LOG_DIR/memgraph_skg.pid"
 LOG_FILE="$LOG_DIR/memgraph_skg.log"
 TEST_LOG_FILE="$LOG_DIR/test_replay.log"
+
+# Default values
+LOOP_MODE=false
 
 # Colors for output
 RED='\033[0;31m'
@@ -223,13 +233,50 @@ start_bridge() {
     return 0
 }
 
+# Parse command line arguments
+parse_args() {
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            --loop)
+                LOOP_MODE=true
+                log_info "Loop mode enabled - replay will run continuously"
+                shift
+                ;;
+            --help|-h)
+                echo "Usage: $0 [--loop] [--help]"
+                echo ""
+                echo "Options:"
+                echo "  --loop    Run replay in continuous loop mode (default: single replay)"
+                echo "  --help    Show this help message"
+                echo ""
+                echo "This script runs memgraph_skg.py first, waits for it to start up properly,"
+                echo "then runs test_replay_utility.py to test data population in Memgraph."
+                exit 0
+                ;;
+            *)
+                log_error "Unknown option: $1"
+                log_error "Use --help for usage information"
+                exit 1
+                ;;
+        esac
+    done
+}
+
 # Run test script
 run_test() {
-    log_info "Running test_replay_utility.py..."
+    if [[ "$LOOP_MODE" == "true" ]]; then
+        log_info "Running test_replay_utility.py in loop mode..."
+    else
+        log_info "Running test_replay_utility.py..."
+    fi
     
     # Run the test script and capture output (from project root for proper imports)
     local exit_code=0
-    (cd "$SCRIPT_DIR" && python3 "$TEST_SCRIPT") > "$TEST_LOG_FILE" 2>&1 || exit_code=$?
+    if [[ "$LOOP_MODE" == "true" ]]; then
+        (cd "$SCRIPT_DIR" && python3 "$TEST_SCRIPT" --loop) > "$TEST_LOG_FILE" 2>&1 || exit_code=$?
+    else
+        (cd "$SCRIPT_DIR" && python3 "$TEST_SCRIPT") > "$TEST_LOG_FILE" 2>&1 || exit_code=$?
+    fi
     
     if [[ $exit_code -eq 0 ]]; then
         log_success "test_replay_utility.py completed successfully"
@@ -267,11 +314,19 @@ run_test() {
 
 # Main execution function
 main() {
+    # Parse command line arguments first
+    parse_args "$@"
+    
     # Create log directory first
     mkdir -p "$LOG_DIR"
     
     log_info "Starting NATS-Memgraph Bridge Test Sequence"
     log_info "Script directory: $SCRIPT_DIR"
+    if [[ "$LOOP_MODE" == "true" ]]; then
+        log_info "Mode: Continuous loop replay"
+    else
+        log_info "Mode: Single replay"
+    fi
     
     # Setup trap for cleanup on exit
     trap cleanup EXIT INT TERM QUIT
