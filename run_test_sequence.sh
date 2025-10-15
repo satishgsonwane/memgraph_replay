@@ -28,8 +28,8 @@ LOG_FILE="$LOG_DIR/memgraph_skg.log"
 TEST_LOG_FILE="$LOG_DIR/test_replay.log"
 
 # Default values
-LOOP_MODE=false
-TOPIC_RATES_MODE=false
+LOOP_MODE=true
+TOPIC_RATES_MODE=true
 
 # Colors for output
 RED='\033[0;31m'
@@ -239,26 +239,32 @@ start_bridge() {
 parse_args() {
     while [[ $# -gt 0 ]]; do
         case $1 in
-            --loop)
-                LOOP_MODE=true
-                log_info "Loop mode enabled - replay will run continuously"
+            --no-loop)
+                LOOP_MODE=false
+                log_info "Loop mode disabled - replay will run once"
                 shift
                 ;;
-            --topic-rates)
-                TOPIC_RATES_MODE=true
-                log_info "Topic-specific rates mode enabled - each topic will use its configured rate"
+            --no-topic-rates)
+                TOPIC_RATES_MODE=false
+                log_info "Topic-specific rates mode disabled - using global framerate"
                 shift
                 ;;
             --help|-h)
-                echo "Usage: $0 [--loop] [--topic-rates] [--help]"
+                echo "Usage: $0 [--no-loop] [--no-topic-rates] [--help]"
                 echo ""
                 echo "Options:"
-                echo "  --loop        Run replay in continuous loop mode (default: single replay)"
-                echo "  --topic-rates Use topic-specific replay rates instead of global framerate"
-                echo "  --help        Show this help message"
+                echo "  --no-loop        Disable loop mode (default: loop enabled)"
+                echo "  --no-topic-rates Disable topic-specific rates (default: topic-specific rates enabled)"
+                echo "  --help           Show this help message"
                 echo ""
                 echo "This script runs memgraph_skg.py first, waits for it to start up properly,"
                 echo "then runs test_replay_utility.py to test data population in Memgraph."
+                echo ""
+                echo "Examples:"
+                echo "  $0                                    # Run with loop + topic-specific rates (default)"
+                echo "  $0 --no-loop                          # Run once with topic-specific rates"
+                echo "  $0 --no-topic-rates                   # Run in loop with global framerate"
+                echo "  $0 --no-loop --no-topic-rates         # Run once with global framerate"
                 exit 0
                 ;;
             *)
@@ -347,12 +353,14 @@ main() {
     
     log_info "Starting NATS-Memgraph Bridge Test Sequence"
     log_info "Script directory: $SCRIPT_DIR"
-    if [[ "$LOOP_MODE" == "true" ]]; then
-        log_info "Mode: Continuous loop replay"
+    if [[ "$LOOP_MODE" == "true" ]] && [[ "$TOPIC_RATES_MODE" == "true" ]]; then
+        log_info "Mode: Continuous loop replay with topic-specific rates (default)"
+    elif [[ "$LOOP_MODE" == "true" ]]; then
+        log_info "Mode: Continuous loop replay with global framerate"
     elif [[ "$TOPIC_RATES_MODE" == "true" ]]; then
-        log_info "Mode: Topic-specific rates replay"
+        log_info "Mode: Single replay with topic-specific rates"
     else
-        log_info "Mode: Single replay"
+        log_info "Mode: Single replay with global framerate"
     fi
     
     # Setup trap for cleanup on exit

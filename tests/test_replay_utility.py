@@ -149,21 +149,21 @@ async def main():
     # Parse command line arguments
     parser = argparse.ArgumentParser(description='Test script for NATS Replay Utility')
     parser.add_argument(
-        '--loop', '-l',
+        '--no-loop',
         action='store_true',
-        help='Run replay in continuous loop mode (default: single replay)'
+        help='Disable loop mode (default: loop enabled)'
     )
     parser.add_argument(
-        '--topic-rates', '-t',
+        '--no-topic-rates',
         action='store_true',
-        help='Use topic-specific replay rates instead of global framerate (default: use global framerate)'
+        help='Disable topic-specific rates (default: topic-specific rates enabled)'
     )
     args = parser.parse_args()
     
     logger.info("Starting NATS Replay Utility tests...")
-    if args.loop:
+    if not args.no_loop:
         logger.info("Loop mode enabled - replay will run continuously")
-    if args.topic_rates:
+    if not args.no_topic_rates:
         logger.info("Topic-specific rates enabled - each topic will use its configured rate")
     
     # Test configuration
@@ -198,7 +198,7 @@ async def main():
     # Test replay with existing data
     logger.info("Testing replay with existing captured data...")
     try:
-        await test_replay(captured_file, loop_mode=args.loop, topic_specific_rates=args.topic_rates)
+        await test_replay(captured_file, loop_mode=not args.no_loop, topic_specific_rates=not args.no_topic_rates)
         logger.info("Replay test passed")
     except Exception as e:
         logger.error(f"Replay test failed: {e}")
