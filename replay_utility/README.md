@@ -43,7 +43,7 @@ python -m replay_utility capture --duration 30 --output my_capture.json
 
 ```bash
 # Replay captured messages with bridge (default: continuous loop with topic-specific rates)
-python -m replay_utility replay --input captured_data/capture_20250127_120000.json
+python -m replay_utility replay --input data/captured/my_capture.json
 
 # Replay options:
 # --no-loop: Single replay instead of continuous loop
@@ -62,7 +62,7 @@ replay_utility/
 ├── runner.py            # CLI entry point with bridge integration
 └── config.py            # Configuration settings
 
-captured_data/           # Default directory for JSON files
+data/captured/           # Default directory for JSON files
 └── .gitignore          # Ignore JSON files from git
 ```
 

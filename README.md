@@ -1,6 +1,6 @@
 # NATS-Memgraph Replay Utility
 
-A high-performance bridge service that captures NATS messages and replays them to populate a Memgraph database with game state data.
+A high-performance bridge service that captures NATS messages and replays them to populate a Memgraph database with game state data. This project provides both a production-ready NATS-Memgraph bridge service and a comprehensive replay utility for testing and development.
 
 ## 🚀 Quick Start
 
@@ -119,13 +119,22 @@ See [PROJECT_STRUCTURE.md](docs/PROJECT_STRUCTURE.md) for detailed structure inf
 
 ## 🎯 Key Features
 
-- **High-Performance**: Sub-10ms P95 latency with batch processing
+### Core Bridge Service
+- **High-Performance**: Sub-10ms P95 latency with ultra-low latency batch processing (5ms intervals)
 - **Time-Based TTL**: Automatic data cleanup with configurable retention (30-second sliding window)
 - **USD Schema**: Persistent game state with Scene_Descriptor structure
 - **Relationship Management**: Proper node relationships for CameraConfig, FusedPlayer, and FusionBall3D
-- **Replay Testing**: Capture and replay functionality with intelligent defaults
+- **Connection Pooling**: 15 database connections for high throughput
+- **Message Deduplication**: Intelligent caching to prevent duplicates
+
+### Replay Utility
+- **Capture Mode**: Subscribe to 6 NATS topics and save messages to JSON
+- **Replay Mode**: Load captured messages and replay with intelligent defaults
+- **Bridge Integration**: Automatically runs Memgraph bridge in background thread during replay
+- **Timing Accuracy**: Maintains precise message timing based on original framerate
 - **Topic-Specific Rates**: Realistic replay rates per topic (enabled by default)
 - **Continuous Replay**: Loop mode for continuous testing (enabled by default)
+- **Graceful Shutdown**: Handles Ctrl+C and cleanup properly
 
 ## 🔗 Node Relationships
 
@@ -137,10 +146,18 @@ The system creates these key relationships in Memgraph:
 
 ## 📊 Performance
 
+### Bridge Service Performance
 - **Batch Processing**: 5ms intervals for ultra-low latency
 - **Connection Pooling**: 15 database connections for high throughput
 - **TTL Cleanup**: 1-second intervals for data retention management
 - **Message Deduplication**: Intelligent caching to prevent duplicates
+- **Query Timeout**: 50ms maximum query time to prevent blocking
+
+### Replay Utility Performance
+- **Timing Accuracy**: Maintains precise message timing based on original framerate
+- **Topic-Specific Rates**: Each topic replays at its configured rate for realistic testing
+- **Memory Efficient**: Uses orjson for fast JSON parsing
+- **Background Processing**: Bridge runs in separate thread during replay
 
 ## 🛠️ Development
 
@@ -171,6 +188,9 @@ python3 tests/test_replay_utility.py
 # Test options:
 # --no-loop: Disable loop mode
 # --no-topic-rates: Disable topic-specific rates
+
+# Test environment setup
+python3 test_environment.py
 ```
 
 ## 📚 Documentation
@@ -183,16 +203,32 @@ python3 tests/test_replay_utility.py
 ## ⚙️ Configuration
 
 Configuration is centralized in `src/core/config.py` with:
-- NATS connection settings
-- Memgraph database settings  
-- Performance tuning parameters
-- TTL and cleanup intervals
+
+### Connection Settings
+- **NATS URL**: `nats://localhost:4222`
+- **Memgraph Host**: `localhost:7687`
+- **Connection Pool**: 15 connections for high throughput
+
+### Performance Tuning
+- **Batch Interval**: 5ms for ultra-low latency
+- **Max Batch Size**: 200 messages per batch
+- **Query Timeout**: 50ms maximum query time
+- **Connection Timeout**: 100ms connection establishment
+
+### TTL and Cleanup
+- **Rolling Window**: 30 seconds data retention
+- **Cleanup Interval**: 1 second cleanup frequency
+- **Max Cleanup Time**: 50ms maximum cleanup duration
+
+### Topic Filtering
+- Filters low-value topics (`fps.*`, `colour-control.*`, `camera_mode_entry.*`)
+- Focuses processing on high-value game state data
 
 ## 🐍 Environment Management
 
 ### Creating Environment
 ```bash
-# Option 1: Automated setup script
+# Option 1: Automated setup script (recommended)
 ./setup_conda_env.sh
 
 # Option 2: Using environment.yml
