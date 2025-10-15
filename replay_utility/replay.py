@@ -232,8 +232,8 @@ class NATSReplay:
                     break
                 
                 # Small delay between loops to prevent overwhelming the system
-                logger.info("Waiting 1 second before next loop iteration...")
-                await asyncio.sleep(1.0)
+                logger.info(f"Waiting {self.config.loop_iteration_delay} seconds before next loop iteration...")
+                await asyncio.sleep(self.config.loop_iteration_delay)
             
         except KeyboardInterrupt:
             logger.info("Replay interrupted by user")

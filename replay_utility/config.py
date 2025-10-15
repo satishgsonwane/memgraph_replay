@@ -20,7 +20,8 @@ class ReplayConfig:
         
         # Replay settings
         self.default_framerate = 60.0  # Hz
-        self.bridge_startup_delay = 2.0  # seconds
+        self.bridge_startup_delay = 0.5  # seconds - reduced from 2.0s for faster startup
+        self.loop_iteration_delay = 0.1  # seconds - delay between loop iterations
         
         # Topic-specific replay rates (Hz) - based on actual captured data analysis
         self.topic_rates = {

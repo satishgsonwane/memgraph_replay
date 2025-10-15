@@ -67,7 +67,9 @@ class BridgeManager:
         
         # Wait for bridge to be ready
         logger.info("Waiting for bridge initialization...")
-        time.sleep(2.0)  # Give bridge time to start
+        from .config import ReplayConfig
+        config = ReplayConfig()
+        time.sleep(config.bridge_startup_delay)  # Use configurable delay
         logger.info("Bridge should be ready for message processing")
     
     async def _run_bridge_async(self) -> None:
