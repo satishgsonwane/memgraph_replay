@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 class NATSReplay:
     """Replays captured NATS messages to local server"""
     
-    def __init__(self, config: ReplayConfig, loop: bool = False, topic_specific_rates: bool = False):
+    def __init__(self, config: ReplayConfig, loop: bool = True, topic_specific_rates: bool = True):
         self.config = config
         self.nc: Optional[nats.NATS] = None
         self.messages: List[Dict[str, Any]] = []
