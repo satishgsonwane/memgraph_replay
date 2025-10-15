@@ -1,0 +1,18 @@
+---
+alwaysApply: true
+---
+# Git Command Restrictions in Agent Mode
+
+When in agent mode, DO NOT execute any git commands including but not limited to:
+- git commit
+- git push
+- git rebase
+- git merge
+- git reset --hard
+- git checkout -f
+- git clean -fd
+- Any other destructive git operations
+
+Instead, suggest the commands to the user or provide instructions for manual execution.
+
+Allowed: git status, git log, git diff (read-only operations)
