@@ -95,10 +95,14 @@ python scripts/setup/init_usd_scene.py
 python memgraph_skg.py
 
 # Capture NATS messages
-python -m replay_utility.capture
+python -m replay_utility capture
 
-# Replay captured data
-python -m replay_utility.replay data/captured/my_capture.json
+# Replay captured data (default: continuous loop with topic-specific rates)
+python -m replay_utility replay --input data/captured/my_capture.json
+
+# Replay options:
+# --no-loop: Single replay instead of continuous loop
+# --no-topic-rates: Use global framerate instead of topic-specific rates
 ```
 
 ## 📁 Project Structure
@@ -116,10 +120,12 @@ See [PROJECT_STRUCTURE.md](docs/PROJECT_STRUCTURE.md) for detailed structure inf
 ## 🎯 Key Features
 
 - **High-Performance**: Sub-10ms P95 latency with batch processing
-- **Time-Based TTL**: Automatic data cleanup with configurable retention
+- **Time-Based TTL**: Automatic data cleanup with configurable retention (30-second sliding window)
 - **USD Schema**: Persistent game state with Scene_Descriptor structure
 - **Relationship Management**: Proper node relationships for CameraConfig, FusedPlayer, and FusionBall3D
-- **Replay Testing**: Capture and replay functionality for testing
+- **Replay Testing**: Capture and replay functionality with intelligent defaults
+- **Topic-Specific Rates**: Realistic replay rates per topic (enabled by default)
+- **Continuous Replay**: Loop mode for continuous testing (enabled by default)
 
 ## 🔗 Node Relationships
 
@@ -152,11 +158,19 @@ python3 scripts/tools/fix_usd_relationships.py
 
 ### Testing
 ```bash
-# Run complete test sequence
+# Run complete test sequence (default: continuous loop with topic-specific rates)
 ./run_test_sequence.sh
+
+# Test sequence options:
+# --no-loop: Single replay instead of continuous loop
+# --no-topic-rates: Use global framerate instead of topic-specific rates
 
 # Run individual tests
 python3 tests/test_replay_utility.py
+
+# Test options:
+# --no-loop: Disable loop mode
+# --no-topic-rates: Disable topic-specific rates
 ```
 
 ## 📚 Documentation

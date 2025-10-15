@@ -26,8 +26,13 @@ Before running the test sequence, ensure you have:
 ### Basic Usage
 
 ```bash
-# Run the complete test sequence
+# Run the complete test sequence (default: continuous loop with topic-specific rates)
 ./run_test_sequence.sh
+
+# Run with different modes:
+./run_test_sequence.sh --no-loop         # Single replay with topic-specific rates
+./run_test_sequence.sh --no-topic-rates  # Continuous loop with global framerate
+./run_test_sequence.sh --no-loop --no-topic-rates  # Single replay with global framerate
 ```
 
 ### What the Script Does
@@ -70,6 +75,7 @@ The script creates the following log files in the `logs/` directory:
 
 ```
 [INFO] Starting NATS-Memgraph Bridge Test Sequence
+[INFO] Mode: Continuous loop replay with topic-specific rates (default)
 [INFO] Setting up test environment...
 [SUCCESS] Setup completed
 [INFO] Starting memgraph_skg.py...
@@ -80,6 +86,8 @@ The script creates the following log files in the `logs/` directory:
 [INFO] Checking if NATS-Memgraph bridge is ready...
 [SUCCESS] NATS-Memgraph bridge is ready
 [INFO] Running test_replay_utility.py...
+[INFO] Loop mode enabled - replay will run continuously
+[INFO] Topic-specific rates enabled - each topic will use its configured rate
 [SUCCESS] test_replay_utility.py completed successfully
 === Test Results Summary ===
 Testing configuration...

@@ -5,9 +5,11 @@ A self-contained utility for capturing NATS messages and replaying them locally 
 ## Features
 
 - **Capture Mode**: Subscribe to 6 NATS topics and save messages to JSON
-- **Replay Mode**: Load captured messages and replay at framerate from `tickperframe`
+- **Replay Mode**: Load captured messages and replay with intelligent defaults
 - **Bridge Integration**: Automatically runs Memgraph bridge in background thread during replay
 - **Timing Accuracy**: Maintains precise message timing based on original framerate
+- **Topic-Specific Rates**: Realistic replay rates per topic (enabled by default)
+- **Continuous Replay**: Loop mode for continuous testing (enabled by default)
 - **Graceful Shutdown**: Handles Ctrl+C and cleanup properly
 
 ## Quick Start
@@ -40,8 +42,12 @@ python -m replay_utility capture --duration 30 --output my_capture.json
 #### Replay Messages
 
 ```bash
-# Replay captured messages with bridge
+# Replay captured messages with bridge (default: continuous loop with topic-specific rates)
 python -m replay_utility replay --input captured_data/capture_20250127_120000.json
+
+# Replay options:
+# --no-loop: Single replay instead of continuous loop
+# --no-topic-rates: Use global framerate instead of topic-specific rates
 ```
 
 ## Architecture
@@ -76,8 +82,11 @@ captured_data/           # Default directory for JSON files
 
 #### 2. Replay Module (`replay.py`)
 - Loads captured messages from JSON files
-- Extracts framerate from `tickperframe` messages (default: 60 Hz)
-- Publishes messages to local NATS (localhost:4222) at calculated rate
+- Supports two replay modes:
+  - **Topic-Specific Rates** (default): Each topic replays at its configured rate
+  - **Global Framerate**: All topics replay at the same rate from `tickperframe`
+- Supports continuous loop mode (default) or single replay
+- Publishes messages to local NATS (localhost:4222) with accurate timing
 - Maintains timing accuracy and logs progress
 
 #### 3. Runner Module (`runner.py`)
@@ -178,7 +187,14 @@ The test script will:
 
 3. **Replay messages**:
    ```bash
+   # Default: continuous loop with topic-specific rates
    python -m replay_utility replay --input captured_data/capture_20250127_120000.json
+   
+   # Single replay with topic-specific rates
+   python -m replay_utility replay --input captured_data/capture_20250127_120000.json --no-loop
+   
+   # Continuous loop with global framerate
+   python -m replay_utility replay --input captured_data/capture_20250127_120000.json --no-topic-rates
    ```
 
 ### Advanced Usage
@@ -187,8 +203,11 @@ The test script will:
 # Capture with custom settings
 python -m replay_utility capture --duration 120 --output long_capture.json
 
-# Replay specific capture
-python -m replay_utility replay --input long_capture.json
+# Replay with different modes
+python -m replay_utility replay --input long_capture.json                    # Default: loop + topic rates
+python -m replay_utility replay --input long_capture.json --no-loop         # Single replay + topic rates
+python -m replay_utility replay --input long_capture.json --no-topic-rates   # Loop + global framerate
+python -m replay_utility replay --input long_capture.json --no-loop --no-topic-rates  # Single + global framerate
 ```
 
 ## Troubleshooting

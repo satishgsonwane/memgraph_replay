@@ -298,11 +298,11 @@ run_test() {
     
     # Build command arguments
     local cmd_args=""
-    if [[ "$LOOP_MODE" == "true" ]]; then
-        cmd_args="$cmd_args --loop"
+    if [[ "$LOOP_MODE" == "false" ]]; then
+        cmd_args="$cmd_args --no-loop"
     fi
-    if [[ "$TOPIC_RATES_MODE" == "true" ]]; then
-        cmd_args="$cmd_args --topic-rates"
+    if [[ "$TOPIC_RATES_MODE" == "false" ]]; then
+        cmd_args="$cmd_args --no-topic-rates"
     fi
     
     # Run the test script and capture output (from project root for proper imports)
