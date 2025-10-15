@@ -7,11 +7,11 @@
 # then runs test_replay_utility.py to test data population in Memgraph.
 # 
 # Usage:
-#   ./run_test_sequence.sh [--loop] [--topic-rates] [--help]
-#   
+#   ./run_test_sequence.sh [--no-loop] [--no-topic-rates] [--help]
+#
 # Options:
-#   --loop        Run replay in continuous loop mode (default: single replay)
-#   --topic-rates Use topic-specific replay rates instead of global framerate
+#   --no-loop        Disable loop mode (default: loop enabled)
+#   --no-topic-rates Disable topic-specific rates (default: topic-specific rates enabled)
 #   --help        Show this help message
 # ===================================================
 
