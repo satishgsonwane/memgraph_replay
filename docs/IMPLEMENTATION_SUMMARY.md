@@ -39,11 +39,9 @@ example_replay_usage.py  # Example usage demonstration
 
 #### 2. **Replay Mode** (`replay.py`)
 - ✅ Loads captured messages from JSON files
-- ✅ **Topic-Specific Rates** (default): Each topic replays at its configured rate
-- ✅ **Global Framerate**: All topics replay at same rate from `tickperframe` messages
-- ✅ **Continuous Loop** (default): Replays indefinitely for testing
-- ✅ **Single Replay**: Replays once and stops
-- ✅ Publishes messages to local NATS (localhost:4222) with accurate timing
+- ✅ Extracts framerate from `tickperframe` messages (default: 60 Hz)
+- ✅ Calculates replay interval: `1.0 / framerate` seconds
+- ✅ Publishes messages to local NATS (localhost:4222) at calculated rate
 - ✅ Maintains message order and timing accuracy
 - ✅ Logs timing drift if > 10ms from target
 - ✅ Progress indicators and statistics
@@ -60,9 +58,7 @@ example_replay_usage.py  # Example usage demonstration
 - ✅ NATS URL: `nats://localhost:4222`
 - ✅ Local NATS URL: `nats://localhost:4222`
 - ✅ Default capture duration: 30 seconds
-- ✅ **Topic-Specific Rates**: Configurable rates per topic (enabled by default)
-- ✅ **Default Topic Rates**: Based on actual captured data analysis
-- ✅ **Loop Mode**: Continuous replay (enabled by default)
+- ✅ Default replay framerate: 60 Hz
 - ✅ Automatic directory creation for captured data
 - ✅ Input file validation
 
@@ -82,12 +78,8 @@ python -m replay_utility capture --duration 30 --output my_capture.json
 
 #### Replay Messages
 ```bash
-# Replay captured messages with bridge (default: continuous loop with topic-specific rates)
+# Replay captured messages with bridge
 python -m replay_utility replay --input captured_data/capture_20250127_120000.json
-
-# Replay options:
-# --no-loop: Single replay instead of continuous loop
-# --no-topic-rates: Use global framerate instead of topic-specific rates
 ```
 
 ### 📊 JSON Format
@@ -155,26 +147,21 @@ Captured messages are saved with comprehensive metadata:
 
 - ✅ **Capture 30 seconds of NATS messages** from local server
 - ✅ **Save to JSON with correct format** including metadata
-- ✅ **Replay messages with intelligent defaults** (continuous loop + topic-specific rates)
-- ✅ **Topic-specific replay rates** based on actual captured data analysis
-- ✅ **Continuous loop mode** for ongoing testing and development
+- ✅ **Replay messages at framerate** specified in tickperframe
 - ✅ **Bridge runs in separate thread** and processes messages
 - ✅ **Data appears in Memgraph** during replay
 - ✅ **Graceful shutdown on Ctrl+C** with proper cleanup
 - ✅ **Clear CLI interface** with progress indicators
-- ✅ **Flexible configuration** with --no-loop and --no-topic-rates options
 
 ### 🎉 Ready for Use
 
 The NATS Replay Utility is now ready for production use! It provides:
 
 1. **Complete Capture & Replay Workflow**: From local NATS to local replay with bridge
-2. **Intelligent Defaults**: Continuous loop with topic-specific rates for optimal testing
-3. **Flexible Configuration**: Easy opt-out with --no-loop and --no-topic-rates options
-4. **Production-Ready Code**: Comprehensive error handling, logging, and cleanup
-5. **Easy-to-Use CLI**: Simple commands for capture and replay operations
-6. **Realistic Data Rates**: Topic-specific rates based on actual captured data analysis
-7. **Comprehensive Documentation**: README with examples and troubleshooting
-8. **Testing Support**: Test scripts and example usage
+2. **Production-Ready Code**: Comprehensive error handling, logging, and cleanup
+3. **Easy-to-Use CLI**: Simple commands for capture and replay operations
+4. **Flexible Configuration**: Customizable settings for different use cases
+5. **Comprehensive Documentation**: README with examples and troubleshooting
+6. **Testing Support**: Test scripts and example usage
 
 The utility integrates seamlessly with the existing OZ Game State Service and maintains all the performance characteristics and data relationships of the original system.

@@ -6,11 +6,10 @@ This script provides basic testing functionality for the replay utility.
 Run this to verify the implementation works correctly.
 
 Usage:
-    python test_replay_utility.py [--no-loop] [--no-topic-rates]
+    python test_replay_utility.py [--loop]
     
-    Options:
-    --no-loop    Disable loop mode (default: loop enabled)
-    --no-topic-rates Disable topic-specific rates (default: topic-specific rates enabled)
+Options:
+    --loop    Run replay in continuous loop mode (default: single replay)
 """
 
 import argparse
@@ -47,7 +46,7 @@ async def test_capture():
         logger.error(f"Capture test failed: {e}")
         return None
 
-async def test_replay(file_path: Path, loop_mode: bool = True, topic_specific_rates: bool = True):
+async def test_replay(file_path: Path, loop_mode: bool = False, topic_specific_rates: bool = False):
     """Test replay functionality"""
     mode_desc = []
     if loop_mode:
