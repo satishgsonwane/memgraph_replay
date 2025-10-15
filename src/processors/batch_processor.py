@@ -8,7 +8,7 @@ from src.core.interfaces import (
     QueryExecutorInterface, 
     MetricsInterface
 )
-from src.core.config import MAX_BATCH_SIZE
+from src.core.config import MAX_BATCH_SIZE, logger
 
 # ---------------------------------------------------
 # Batch Processing Component
@@ -58,7 +58,6 @@ class BatchProcessor:
         async with self._config_lock:
             old_size = self._max_batch_size
             self._max_batch_size = new_size
-            from src.core.config import logger
             logger.info(f"BatchProcessor: max_batch_size changed from {old_size} to {new_size}")
 
     async def add_queries(self, topic: str, queries: List[str]) -> None:

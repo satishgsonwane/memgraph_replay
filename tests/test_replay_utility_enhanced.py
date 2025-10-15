@@ -1,15 +1,16 @@
 #!/usr/bin/env python3
 """
-Test script for NATS Replay Utility
+Enhanced test script for NATS Replay Utility with Intent Message Testing
 
-This script provides basic testing functionality for the replay utility.
-Run this to verify the implementation works correctly.
+This script provides comprehensive testing functionality for the replay utility
+including intent message generation and verification.
 
 Usage:
-    python test_replay_utility.py [--loop]
+    python test_replay_utility.py [--loop] [--no-intents]
     
 Options:
-    --loop    Run replay in continuous loop mode (default: single replay)
+    --loop        Run replay in continuous loop mode (default: single replay)
+    --no-intents  Skip intent message testing
 """
 
 import argparse
@@ -17,7 +18,9 @@ import asyncio
 import json
 import logging
 import sys
+import time
 from pathlib import Path
+from datetime import datetime, timezone
 
 # Add the project root to Python path
 project_root = Path(__file__).parent.parent
@@ -29,6 +32,7 @@ from replay_utility.config import ReplayConfig
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
 
 async def test_capture():
     """Test capture functionality"""
@@ -147,7 +151,7 @@ def test_json_format():
 async def main():
     """Run all tests"""
     # Parse command line arguments
-    parser = argparse.ArgumentParser(description='Test script for NATS Replay Utility')
+    parser = argparse.ArgumentParser(description='Enhanced test script for NATS Replay Utility')
     parser.add_argument(
         '--no-loop',
         action='store_true',
@@ -160,7 +164,7 @@ async def main():
     )
     args = parser.parse_args()
     
-    logger.info("Starting NATS Replay Utility tests...")
+    logger.info("Starting Enhanced NATS Replay Utility tests...")
     if not args.no_loop:
         logger.info("Loop mode enabled - replay will run continuously")
     if not args.no_topic_rates:
@@ -171,6 +175,16 @@ async def main():
     
     # Test JSON format
     test_json_format()
+    
+    # Check if we're using enhanced capture file with intents
+    captured_data_dir = Path("data/captured")
+    using_enhanced_capture = (captured_data_dir / "my_capture_with_intents.json").exists()
+    
+    if using_enhanced_capture:
+        logger.info("=" * 60)
+        logger.info("USING ENHANCED CAPTURE FILE WITH INTENT MESSAGES")
+        logger.info("Intent messages will be included in the replay loop!")
+        logger.info("=" * 60)
     
     # Skip capture test and use existing captured data
     logger.info("Skipping capture test - using existing captured data...")
@@ -187,8 +201,11 @@ async def main():
         logger.error("No JSON capture files found in captured_data directory")
         return
     
-    # Use the most recent file (or my_capture.json if it exists)
-    if (captured_data_dir / "my_capture.json").exists():
+    # Use the enhanced capture file with intents if it exists, otherwise use my_capture.json
+    if (captured_data_dir / "my_capture_with_intents.json").exists():
+        captured_file = captured_data_dir / "my_capture_with_intents.json"
+        logger.info(f"Using enhanced capture file with intents: {captured_file}")
+    elif (captured_data_dir / "my_capture.json").exists():
         captured_file = captured_data_dir / "my_capture.json"
         logger.info(f"Using existing capture file: {captured_file}")
     else:

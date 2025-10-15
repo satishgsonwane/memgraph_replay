@@ -21,7 +21,7 @@ set -u  # Exit on undefined variables
 # Configuration
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 MEMGRAPH_SCRIPT="$SCRIPT_DIR/memgraph_skg.py"
-TEST_SCRIPT="$SCRIPT_DIR/tests/test_replay_utility.py"
+TEST_SCRIPT="$SCRIPT_DIR/tests/test_replay_utility_enhanced.py"
 LOG_DIR="$SCRIPT_DIR/logs"
 PID_FILE="$LOG_DIR/memgraph_skg.pid"
 LOG_FILE="$LOG_DIR/memgraph_skg.log"
