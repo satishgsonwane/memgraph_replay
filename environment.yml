@@ -1,0 +1,37 @@
+name: memgraph_replay
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  # Python version
+  - python=3.10
+  
+  # Core dependencies (install via pip for better compatibility)
+  - pip
+  
+  # System dependencies
+  - build-essential  # For compiling some packages
+  
+  # Pip dependencies
+  - pip:
+    # Database connectivity
+    - mgclient>=2.0.0                    # Memgraph Python client
+    
+    # Message bus connectivity  
+    - nats-py>=2.0.0                     # NATS async client for Python
+    
+    # JSON processing (high performance)
+    - orjson>=3.9.0                      # Fast JSON library
+    
+    # Data validation and serialization
+    - pydantic>=2.0.0                    # Data validation and settings management
+    
+    # Standard library extensions
+    - typing-extensions>=4.0.0           # Enhanced typing support
+    
+    # Development and testing (optional)
+    - pytest>=7.0.0                      # Testing framework
+    - pytest-asyncio>=0.21.0             # Async testing support
+    
+    # Optional: Performance monitoring
+    - psutil>=5.9.0                      # System and process utilities

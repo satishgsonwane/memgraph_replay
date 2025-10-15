@@ -1,0 +1,27 @@
+# ===================================================
+# NATS-Memgraph Replay Utility Requirements
+# ===================================================
+# Core dependencies for the NATS-Memgraph bridge and replay utility
+# ===================================================
+
+# Database connectivity
+mgclient>=2.0.0                    # Memgraph Python client
+
+# Message bus connectivity  
+nats-py>=2.0.0                     # NATS async client for Python
+
+# JSON processing (high performance)
+orjson>=3.9.0                      # Fast JSON library
+
+# Data validation and serialization
+pydantic>=2.0.0                    # Data validation and settings management
+
+# Standard library extensions (if needed)
+typing-extensions>=4.0.0           # Enhanced typing support
+
+# Development and testing (optional)
+pytest>=7.0.0                      # Testing framework
+pytest-asyncio>=0.21.0             # Async testing support
+
+# Optional: Performance monitoring
+psutil>=5.9.0                      # System and process utilities

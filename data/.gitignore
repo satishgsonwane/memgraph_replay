@@ -1,0 +1,5 @@
+# Ignore captured JSON files
+*.json
+
+# Keep directory structure
+!.gitignore
