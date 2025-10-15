@@ -7,11 +7,12 @@
 # then runs test_replay_utility.py to test data population in Memgraph.
 # 
 # Usage:
-#   ./run_test_sequence.sh [--loop] [--help]
+#   ./run_test_sequence.sh [--loop] [--topic-rates] [--help]
 #   
 # Options:
-#   --loop    Run replay in continuous loop mode (default: single replay)
-#   --help    Show this help message
+#   --loop        Run replay in continuous loop mode (default: single replay)
+#   --topic-rates Use topic-specific replay rates instead of global framerate
+#   --help        Show this help message
 # ===================================================
 
 set -e  # Exit on any error
@@ -28,6 +29,7 @@ TEST_LOG_FILE="$LOG_DIR/test_replay.log"
 
 # Default values
 LOOP_MODE=false
+TOPIC_RATES_MODE=false
 
 # Colors for output
 RED='\033[0;31m'
@@ -242,12 +244,18 @@ parse_args() {
                 log_info "Loop mode enabled - replay will run continuously"
                 shift
                 ;;
+            --topic-rates)
+                TOPIC_RATES_MODE=true
+                log_info "Topic-specific rates mode enabled - each topic will use its configured rate"
+                shift
+                ;;
             --help|-h)
-                echo "Usage: $0 [--loop] [--help]"
+                echo "Usage: $0 [--loop] [--topic-rates] [--help]"
                 echo ""
                 echo "Options:"
-                echo "  --loop    Run replay in continuous loop mode (default: single replay)"
-                echo "  --help    Show this help message"
+                echo "  --loop        Run replay in continuous loop mode (default: single replay)"
+                echo "  --topic-rates Use topic-specific replay rates instead of global framerate"
+                echo "  --help        Show this help message"
                 echo ""
                 echo "This script runs memgraph_skg.py first, waits for it to start up properly,"
                 echo "then runs test_replay_utility.py to test data population in Memgraph."
@@ -264,19 +272,36 @@ parse_args() {
 
 # Run test script
 run_test() {
+    local mode_desc=""
     if [[ "$LOOP_MODE" == "true" ]]; then
-        log_info "Running test_replay_utility.py in loop mode..."
+        mode_desc="loop mode"
+    fi
+    if [[ "$TOPIC_RATES_MODE" == "true" ]]; then
+        if [[ -n "$mode_desc" ]]; then
+            mode_desc="${mode_desc} + topic-specific rates"
+        else
+            mode_desc="topic-specific rates"
+        fi
+    fi
+    
+    if [[ -n "$mode_desc" ]]; then
+        log_info "Running test_replay_utility.py in ${mode_desc}..."
     else
         log_info "Running test_replay_utility.py..."
     fi
     
+    # Build command arguments
+    local cmd_args=""
+    if [[ "$LOOP_MODE" == "true" ]]; then
+        cmd_args="$cmd_args --loop"
+    fi
+    if [[ "$TOPIC_RATES_MODE" == "true" ]]; then
+        cmd_args="$cmd_args --topic-rates"
+    fi
+    
     # Run the test script and capture output (from project root for proper imports)
     local exit_code=0
-    if [[ "$LOOP_MODE" == "true" ]]; then
-        (cd "$SCRIPT_DIR" && python3 "$TEST_SCRIPT" --loop) > "$TEST_LOG_FILE" 2>&1 || exit_code=$?
-    else
-        (cd "$SCRIPT_DIR" && python3 "$TEST_SCRIPT") > "$TEST_LOG_FILE" 2>&1 || exit_code=$?
-    fi
+    (cd "$SCRIPT_DIR" && python3 "$TEST_SCRIPT" $cmd_args) > "$TEST_LOG_FILE" 2>&1 || exit_code=$?
     
     if [[ $exit_code -eq 0 ]]; then
         log_success "test_replay_utility.py completed successfully"
@@ -324,6 +349,8 @@ main() {
     log_info "Script directory: $SCRIPT_DIR"
     if [[ "$LOOP_MODE" == "true" ]]; then
         log_info "Mode: Continuous loop replay"
+    elif [[ "$TOPIC_RATES_MODE" == "true" ]]; then
+        log_info "Mode: Topic-specific rates replay"
     else
         log_info "Mode: Single replay"
     fi

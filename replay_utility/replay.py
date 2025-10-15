@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 class NATSReplay:
     """Replays captured NATS messages to local server"""
     
-    def __init__(self, config: ReplayConfig, loop: bool = False):
+    def __init__(self, config: ReplayConfig, loop: bool = False, topic_specific_rates: bool = False):
         self.config = config
         self.nc: Optional[nats.NATS] = None
         self.messages: List[Dict[str, Any]] = []
@@ -33,6 +33,9 @@ class NATSReplay:
         self.current_tick: int = 0
         self.loop: bool = loop
         self.loop_count: int = 0
+        self.topic_specific_rates: bool = topic_specific_rates
+        self.topic_message_counts: Dict[str, int] = {}
+        self.topic_last_publish_time: Dict[str, float] = {}
         
     def load_capture_file(self, file_path: Path) -> None:
         """Load captured messages from JSON file"""
@@ -80,6 +83,57 @@ class NATSReplay:
         
         logger.warning(f"No framerate found in tickperframe messages, using default: {self.framerate} Hz")
     
+    def get_topic_rate(self, topic: str) -> float:
+        """Get the replay rate for a specific topic"""
+        if not self.topic_specific_rates:
+            return self.framerate
+        
+        # Check for exact topic match first
+        if topic in self.config.topic_rates:
+            return self.config.topic_rates[topic]
+        
+        # Check for wildcard patterns
+        for pattern, rate in self.config.topic_rates.items():
+            if pattern.endswith('*'):
+                prefix = pattern[:-1]  # Remove the *
+                if topic.startswith(prefix):
+                    return rate
+        
+        # Use default rate for unknown topics
+        return self.config.default_topic_rate
+    
+    def should_publish_message(self, topic: str, current_time: float) -> bool:
+        """Check if a message should be published based on topic-specific timing"""
+        if not self.topic_specific_rates:
+            return True
+        
+        rate = self.get_topic_rate(topic)
+        interval = 1.0 / rate
+        
+        # Check if enough time has passed since last publish for this topic
+        last_publish = self.topic_last_publish_time.get(topic, 0)
+        if current_time - last_publish >= interval:
+            self.topic_last_publish_time[topic] = current_time
+            return True
+        
+        return False
+    
+    def initialize_topic_tracking(self) -> None:
+        """Initialize topic-specific tracking variables"""
+        if not self.topic_specific_rates:
+            return
+        
+        # Count messages per topic
+        for message in self.messages:
+            topic = message['topic']
+            self.topic_message_counts[topic] = self.topic_message_counts.get(topic, 0) + 1
+        
+        # Log topic statistics
+        logger.info("Topic-specific replay rates:")
+        for topic, count in self.topic_message_counts.items():
+            rate = self.get_topic_rate(topic)
+            logger.info(f"  {topic}: {rate} Hz ({count} messages)")
+    
     async def connect(self) -> None:
         """Connect to local NATS server"""
         try:
@@ -123,12 +177,18 @@ class NATSReplay:
             raise
     
     async def replay_messages(self) -> None:
-        """Replay all messages at calculated framerate"""
+        """Replay all messages with topic-specific or global framerate"""
         if not self.messages:
             raise ValueError("No messages to replay")
         
-        logger.info(f"Starting replay of {len(self.messages)} messages at {self.framerate} Hz")
-        logger.info(f"Replay interval: {self.replay_interval:.3f}s")
+        # Initialize topic tracking if using topic-specific rates
+        if self.topic_specific_rates:
+            self.initialize_topic_tracking()
+            logger.info(f"Starting topic-specific replay of {len(self.messages)} messages")
+        else:
+            logger.info(f"Starting replay of {len(self.messages)} messages at {self.framerate} Hz")
+            logger.info(f"Replay interval: {self.replay_interval:.3f}s")
+        
         if self.loop:
             logger.info("Loop mode enabled - replay will repeat indefinitely")
         
@@ -140,27 +200,13 @@ class NATSReplay:
                     logger.info(f"Starting loop iteration {self.loop_count + 1}")
                     # Reset timing for new loop
                     self.start_time = time.time()
+                    # Reset topic-specific timing
+                    self.topic_last_publish_time.clear()
                 
-                # Replay all messages in this iteration
-                for i, message in enumerate(self.messages):
-                    # Publish message
-                    await self.publish_message(message)
-                    
-                    # Calculate timing for next message
-                    if i < len(self.messages) - 1:  # Don't sleep after last message
-                        # Calculate when next message should be published
-                        target_time = self.start_time + (i + 1) * self.replay_interval
-                        current_time = time.time()
-                        sleep_duration = target_time - current_time
-                        
-                        # Only sleep if we're ahead of schedule
-                        if sleep_duration > 0:
-                            await asyncio.sleep(sleep_duration)
-                        else:
-                            # Log timing drift if significant
-                            drift = -sleep_duration
-                            if drift > 0.01:  # > 10ms drift
-                                logger.warning(f"Timing drift: {drift*1000:.1f}ms behind schedule")
+                if self.topic_specific_rates:
+                    await self._replay_messages_topic_specific()
+                else:
+                    await self._replay_messages_global_rate()
                 
                 # Increment loop counter
                 self.loop_count += 1
@@ -173,7 +219,12 @@ class NATSReplay:
                 logger.info(f"  Messages published: {self.messages_published}")
                 logger.info(f"  Total time: {total_time:.1f}s")
                 logger.info(f"  Actual rate: {actual_rate:.1f} msg/s")
-                logger.info(f"  Target rate: {self.framerate:.1f} msg/s")
+                
+                if self.topic_specific_rates:
+                    logger.info("  Topic-specific rates used")
+                else:
+                    logger.info(f"  Target rate: {self.framerate:.1f} msg/s")
+                
                 logger.info(f"  Final tick: {self.current_tick}")
                 
                 # If not in loop mode, break after first iteration
@@ -189,6 +240,63 @@ class NATSReplay:
         except Exception as e:
             logger.error(f"Error during replay: {e}")
             raise
+    
+    async def _replay_messages_global_rate(self) -> None:
+        """Replay messages using global framerate (original behavior)"""
+        for i, message in enumerate(self.messages):
+            # Publish message
+            await self.publish_message(message)
+            
+            # Calculate timing for next message
+            if i < len(self.messages) - 1:  # Don't sleep after last message
+                # Calculate when next message should be published
+                target_time = self.start_time + (i + 1) * self.replay_interval
+                current_time = time.time()
+                sleep_duration = target_time - current_time
+                
+                # Only sleep if we're ahead of schedule
+                if sleep_duration > 0:
+                    await asyncio.sleep(sleep_duration)
+                else:
+                    # Log timing drift if significant
+                    drift = -sleep_duration
+                    if drift > 0.01:  # > 10ms drift
+                        logger.warning(f"Timing drift: {drift*1000:.1f}ms behind schedule")
+    
+    async def _replay_messages_topic_specific(self) -> None:
+        """Replay messages using topic-specific rates"""
+        # Group messages by topic for better timing control
+        topic_messages = {}
+        for message in self.messages:
+            topic = message['topic']
+            if topic not in topic_messages:
+                topic_messages[topic] = []
+            topic_messages[topic].append(message)
+        
+        # Create separate tasks for each topic
+        tasks = []
+        for topic, messages in topic_messages.items():
+            task = asyncio.create_task(
+                self._publish_topic_messages(topic, messages)
+            )
+            tasks.append(task)
+        
+        # Run all topic publishers concurrently
+        await asyncio.gather(*tasks)
+    
+    async def _publish_topic_messages(self, topic: str, messages: List[Dict[str, Any]]) -> None:
+        """Publish messages for a specific topic at its configured rate"""
+        rate = self.get_topic_rate(topic)
+        interval = 1.0 / rate
+        
+        logger.debug(f"Publishing {len(messages)} messages for topic '{topic}' at {rate} Hz")
+        
+        for message in messages:
+            await self.publish_message(message)
+            
+            # Sleep for the topic-specific interval
+            if interval > 0:
+                await asyncio.sleep(interval)
     
     async def close(self) -> None:
         """Close NATS connection"""

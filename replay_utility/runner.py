@@ -147,7 +147,7 @@ async def run_replay_mode(args) -> None:
         bridge_manager.start_bridge()
         
         # Create replay instance
-        replay = NATSReplay(config, loop=args.loop)
+        replay = NATSReplay(config, loop=args.loop, topic_specific_rates=args.topic_rates)
         
         # Run replay
         await replay.run_replay(input_path)
@@ -181,6 +181,12 @@ Examples:
   
   # Replay captured messages in loop mode
   python -m replay_utility replay --input captured_data/capture_20250127_120000.json --loop
+  
+  # Replay with topic-specific rates
+  python -m replay_utility replay --input captured_data/capture_20250127_120000.json --topic-rates
+  
+  # Replay with both loop and topic-specific rates
+  python -m replay_utility replay --input captured_data/capture_20250127_120000.json --loop --topic-rates
         """
     )
     
@@ -212,6 +218,11 @@ Examples:
         '--loop', '-l',
         action='store_true',
         help='Loop the replay indefinitely (default: replay once and stop)'
+    )
+    replay_parser.add_argument(
+        '--topic-rates', '-t',
+        action='store_true',
+        help='Use topic-specific replay rates instead of global framerate (default: use global framerate)'
     )
     
     # Parse arguments

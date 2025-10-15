@@ -46,15 +46,21 @@ async def test_capture():
         logger.error(f"Capture test failed: {e}")
         return None
 
-async def test_replay(file_path: Path, loop_mode: bool = False):
+async def test_replay(file_path: Path, loop_mode: bool = False, topic_specific_rates: bool = False):
     """Test replay functionality"""
+    mode_desc = []
     if loop_mode:
-        logger.info("Testing replay functionality in loop mode...")
+        mode_desc.append("loop mode")
+    if topic_specific_rates:
+        mode_desc.append("topic-specific rates")
+    
+    if mode_desc:
+        logger.info(f"Testing replay functionality in {' + '.join(mode_desc)}...")
     else:
         logger.info("Testing replay functionality...")
     
     config = ReplayConfig()
-    replay = NATSReplay(config, loop=loop_mode)
+    replay = NATSReplay(config, loop=loop_mode, topic_specific_rates=topic_specific_rates)
     
     try:
         if loop_mode:
@@ -147,11 +153,18 @@ async def main():
         action='store_true',
         help='Run replay in continuous loop mode (default: single replay)'
     )
+    parser.add_argument(
+        '--topic-rates', '-t',
+        action='store_true',
+        help='Use topic-specific replay rates instead of global framerate (default: use global framerate)'
+    )
     args = parser.parse_args()
     
     logger.info("Starting NATS Replay Utility tests...")
     if args.loop:
         logger.info("Loop mode enabled - replay will run continuously")
+    if args.topic_rates:
+        logger.info("Topic-specific rates enabled - each topic will use its configured rate")
     
     # Test configuration
     test_config()
@@ -185,7 +198,7 @@ async def main():
     # Test replay with existing data
     logger.info("Testing replay with existing captured data...")
     try:
-        await test_replay(captured_file, loop_mode=args.loop)
+        await test_replay(captured_file, loop_mode=args.loop, topic_specific_rates=args.topic_rates)
         logger.info("Replay test passed")
     except Exception as e:
         logger.error(f"Replay test failed: {e}")

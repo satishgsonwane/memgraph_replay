@@ -22,6 +22,19 @@ class ReplayConfig:
         self.default_framerate = 60.0  # Hz
         self.bridge_startup_delay = 2.0  # seconds
         
+        # Topic-specific replay rates (Hz) - based on actual captured data analysis
+        self.topic_rates = {
+            "tickperframe": 25.0,      # ~1440 messages in 60s
+            "fused_players": 21.0,     # ~1250 messages in 60s  
+            "fusion.ball_3d": 19.0,    # ~1162 messages in 60s
+            "ptzinfo.*": 24.0,         # ~1440 messages per camera in 60s
+            "all_tracks.*": 12.0,      # Average rate across cameras (~10-14 Hz)
+            "intent.*": 1.0,           # Low frequency intent messages
+        }
+        
+        # Default rate for unknown topics
+        self.default_topic_rate = 25.0
+        
         # Topics to capture
         self.capture_topics = [
             "all_tracks.*",
