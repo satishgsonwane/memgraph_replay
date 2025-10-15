@@ -47,12 +47,14 @@ memgraph_replay/
 │       ├── debug_scene_deletion.py # Scene debugging
 │       ├── fix_usd_relationships.py # Relationship repair
 │       ├── monitor_usd_persistence.py # USD persistence monitoring
+│       ├── generate_intent_messages.py # Intent message generation
 │       ├── nats_manager.sh      # NATS server management
 │       ├── query_recent_tracks_by_camera.py # Camera track queries
 │       └── track_queries.py     # Track analysis queries
 ├── data/                         # Data files
 │   ├── captured/                 # Captured NATS data
-│   │   └── my_capture.json      # Sample captured data
+│   │   ├── my_capture.json      # Sample captured data
+│   │   └── my_capture_with_intents.json # Sample with intent data
 │   └── config/                   # Configuration data
 │       └── gen_pitch_data_standalone.py # Standalone pitch data
 ├── logs/                         # Log files
@@ -66,7 +68,8 @@ memgraph_replay/
 │   └── SETUP_MACOS.md          # macOS setup guide
 ├── tests/                        # Test files
 │   ├── example_replay_usage.py  # Example usage script
-│   └── test_replay_utility.py   # Main test suite
+│   ├── test_replay_utility.py   # Main test suite
+│   └── test_replay_utility_enhanced.py # Enhanced test suite
 ├── memgraph_skg.py              # Main service entry point
 ├── test_environment.py          # Environment testing script
 ├── run_test_sequence.sh         # Automated test runner
@@ -105,7 +108,7 @@ memgraph_replay/
 
 ### Scripts (`scripts/`)
 - **setup/**: Initialization and setup utilities (USD scene, NATS server)
-- **tools/**: Analysis, debugging, and management tools
+- **tools/**: Analysis, debugging, and management tools including intent message generation
 
 ## 🔗 Key Relationships
 
