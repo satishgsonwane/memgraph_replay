@@ -9,9 +9,7 @@ dependencies:
   # Core dependencies (install via pip for better compatibility)
   - pip
   
-  # System dependencies (Linux)
-  - gcc_linux-64    # C compiler for Linux
-  - gxx_linux-64    # C++ compiler for Linux
+  # System dependencies (cross-platform)
   - cmake           # For building some packages
   - make            # Build tool
   
@@ -19,18 +17,18 @@ dependencies:
   - numpy>=1.24.0
   - pandas>=2.0.0
   
-  # Pip dependencies
+  # Pip dependencies (Apple Silicon compatible versions)
   - pip:
     # Database connectivity
-    - pymgclient>=1.5.0                  # Memgraph Python client (official package)
+    - pymgclient>=1.5.0                  # Memgraph Python client (installs as mgclient)
     
     # Message bus connectivity  
     - nats-py>=2.0.0                     # NATS async client for Python
     
-    # JSON processing (high performance)
+    # JSON processing (high performance) - Apple Silicon compatible
     - orjson>=3.9.0                      # Fast JSON library
     
-    # Data validation and serialization
+    # Data validation and serialization - Apple Silicon compatible
     - pydantic>=2.0.0                    # Data validation and settings management
     
     # Retry and resilience

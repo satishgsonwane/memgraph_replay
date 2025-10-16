@@ -5,7 +5,7 @@
 # ===================================================
 
 # Database connectivity
-mgclient>=2.0.0                    # Memgraph Python client
+pymgclient>=1.5.0                  # Memgraph Python client (installs as mgclient)
 
 # Message bus connectivity  
 nats-py>=2.0.0                     # NATS async client for Python
@@ -16,12 +16,22 @@ orjson>=3.9.0                      # Fast JSON library
 # Data validation and serialization
 pydantic>=2.0.0                    # Data validation and settings management
 
-# Standard library extensions (if needed)
+# Retry and resilience
+tenacity>=8.0.0                    # Retry library with exponential backoff
+
+# Filtering and signal processing
+filterpy>=1.4.5                   # Kalman filtering and signal processing
+
+# Standard library extensions
 typing-extensions>=4.0.0           # Enhanced typing support
 
-# Development and testing (optional)
+# Development and testing
 pytest>=7.0.0                      # Testing framework
 pytest-asyncio>=0.21.0             # Async testing support
 
-# Optional: Performance monitoring
+# Performance monitoring and utilities
 psutil>=5.9.0                      # System and process utilities
+
+# Additional useful packages
+numpy>=1.24.0                      # Numerical computing
+pandas>=2.0.0                      # Data manipulation and analysis
