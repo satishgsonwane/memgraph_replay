@@ -9,9 +9,7 @@ dependencies:
   # Core dependencies (install via pip for better compatibility)
   - pip
   
-  # System dependencies (Linux)
-  - gcc_linux-64    # C compiler for Linux
-  - gxx_linux-64    # C++ compiler for Linux
+  # System dependencies (cross-platform)
   - cmake           # For building some packages
   - make            # Build tool
   

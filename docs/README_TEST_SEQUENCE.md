@@ -18,8 +18,8 @@ Before running the test sequence, ensure you have:
 1. **Memgraph running**: The script expects Memgraph to be available at `localhost:7687`
 2. **NATS server**: 
    - NATS server at `localhost:4222`
-3. **Python dependencies**: All required Python packages installed
-4. **Docker**: For the oz-memgraph container restart functionality
+3. **Python dependencies**: All required Python packages installed (use `./setup_env.sh`)
+4. **Docker**: For the Memgraph container restart functionality
 
 ## Usage
 
